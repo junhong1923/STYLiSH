@@ -1,0 +1,52 @@
+footer {
+    /* display: block; */
+    height: 115px;
+    background-color: var(--charcoal-grey);
+    display: flex;
+    align-items: center; /* 垂直置中 */
+    justify-content: center; /* 水平置中 */
+}
+
+footer > nav {
+    width: 754px;
+    flex-shrink: 1; /* 空間不夠的狀態下，依比例縮小 */
+}
+
+footer > nav > ul {
+    display: flex;
+    align-items: center;
+    color: #f5f5f5;
+}
+
+footer > nav > ul > li {
+    width: 130px;
+    text-align: center;
+    line-height: 16px;
+    font-size: 16px;
+    border-right: 1px solid #f5f5f5;
+}
+
+footer > nav > ul > li:hover {
+    color: #c49871;
+    cursor: pointer; /* 空間不夠的狀態下，依比例縮小 */
+}
+
+footer > .links {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 210px;
+    margin-right: 30px;
+}
+
+footer > .links > img {
+    height: 50px;
+    width: 50px;
+    cursor: pointer;
+}
+
+footer > .rights {
+    line-height: 17px;
+    font-size: 12px;
+    color: #828282;
+  }

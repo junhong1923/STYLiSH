@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Login page</title>
+    </head>
+
+    <body>
+        <h1>Sign in</h1>
+        <p id="message"></p>
+        <label for="username">Username: </label>
+        <input type="text" id="username" name="username">
+        <br>
+        <label for="email">Email: </label>
+        <input type="text" id="email" name="email">
+        <br>
+        <label for="password">Password: </label>
+        <input type="text" id="password" name="password">
+        <br>
+        <button onclick="sendAJAX('in')">Sign in</button>
+        <button onclick="window.location.replace('./signup')">If no account, then sign up here!</button>
+        <br>
+        <br>
+        <div class="fb-login-button" data-width="" data-size="large" data-button-type="continue_with" data-layout="default" data-auto-logout-link="true" data-use-continue-as="true"></div>
+            <div id="check"></div>
+        <div id="fb-root"></div>
+        <script>
+            const appId = '267848761636468';
+            window.fbAsyncInit = function() {
+                FB.init({
+                appId            : appId,
+                autoLogAppEvents : true,
+                xfbml            : true,
+                version          : 'v10.0'
+                });
+            };
+
+            (function(d, s, id){
+                var js, fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) {return;}
+                js = d.createElement(s); js.id = id;
+                js.src = "https://connect.facebook.net/en_US/sdk.js";
+                fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+
+            // fb login
+            let session = window.sessionStorage;
+            // console.log(session);
+            
+            let fbButton = document.getElementById('check');
+            fbButton.addEventListener('click', () => {
+                console.log('got event')
+                if (session.getItem(`fbssls_${appId}`) !== null) {
+                    console.log(session.getItem(`fbssls_${appId}`))
+                } else {console.log('no fb session yet')} 
+            });
+
+            // native login
+            let token = window.localStorage.token;
+            // 先檢查是否有token，有的話才set auth. request header
+            if (!(token == undefined)) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/token-auth');
+                xhr.setRequestHeader("Authorization", 'Bearer ' + token);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        console.log(xhr.response);
+                        message.innerHTML = "Already have token, and it's verified successfully";
+                        console.log('verified token successfully');
+                        alert("Verified token existed, redirect to Home Page.");
+                        window.location.replace("/");
+                    }
+                }
+                xhr.send()
+            } else {
+                console.log('No token, Sign up or Login');
+            }
+
+            function sendAJAX(ref) {
+                let message = document.getElementById('message');
+                let name = document.getElementById('username');
+                let email = document.getElementById('email');
+                let password = document.getElementById('password'); 
+
+                let userData = {
+                    "provider" : "native",
+                    "name" : name.value,
+                    "email" : email.value,
+                    "password" : password.value
+                }
+                userData = JSON.stringify(userData);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `/api/1.0/user/sign${ref}`);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.response =='missing some words, please sign in again') {
+                            message.innerHTML = xhr.response;
+                            console.log(xhr.response); // 註冊失誤，如有空格
+                        } else if (xhr.response =='Error 403 : Wrong Login Information') {
+                            message.innerHTML = xhr.response;
+                            console.log(xhr.response); // 帳號或密碼錯誤
+                        } else {
+                            let resObj = JSON.parse(xhr.response); // data from server response is always a string.
+                            message.innerHTML = 'Login successfully!';
+                            localStorage.setItem("token", resObj.data["access_token"]);
+                            console.log('Login successfully!');
+                            window.location.replace("/");
+                        }
+                    }
+                }
+                
+                xhr.send(userData);                
+            }
+        </script>
+    </body>
+    
+</html>

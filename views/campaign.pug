@@ -1,0 +1,20 @@
+doctype html 
+html 
+    head 
+        title Marketing Campaigns Management Page
+        metat(charset='utf-8')
+    body 
+        h2 <strong> Create a Campaign</strong>
+        div <!-- action='/post/campaign' action='/t', method='post', -->
+            form(method='post', enctype='multipart/form-data', name='formCampaign')
+                label Product ID:  
+                input(type='text', name='product_id')
+                br
+                label Story: 
+                textarea(type='text', name='story', style='margin:10px;')
+                br
+                label Picture: 
+                input(type='file', name='picture', accept='.png,.jpeg', multiple)
+                br
+                input(type='submit', value='Create campaign', style='margin:10px;')
+        script(src='../static/authCampaign.js')

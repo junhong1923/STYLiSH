@@ -1,0 +1,80 @@
+doctype html 
+html
+    head 
+        title Product Management Page
+        meta(charset='utf-8')
+    body
+        p <strong>Adding new product</strong>
+        div <!-- action='/productpost' -->
+            form(method='post', enctype='multipart/form-data', name='formProduct')
+                label ID:  
+                    input(type='text', name='product_id')
+                    br
+                label Category:  
+                    select(name='category')
+                        option(value='women') Women
+                        option(value='men') Men
+                        option(value='accessories') Accessories
+                    br
+                label Title:  
+                    input(type='text', name='title')
+                    br
+                label Description: 
+                    br
+                    textarea(name='description') 
+                    br
+                label Price:  
+                    input(type='number', name='price')
+                    br
+                label Texture:  
+                    input(type='text', name='texture')
+                    br
+                label Wash:  
+                    input(type='text', name='wash')
+                    br
+                label Place:  
+                    input(type='text', name='place')
+                    hr
+                label Colors:  
+                    input(type='text', name='color_code', placeholder='#FFFFFF, #888888, #000000')
+                    //- input(type='text', name='other_color', class='addColorInput', plcaeholder='other color')
+                    //- button(class='addColorButton') Add color
+                    br
+                label Color Names:  
+                    input(type='text', name='color_name', placeholder='白色, 灰色, 黑色')
+                    br    
+                //- label Sizes:  
+                //-     input(type='text', name='sizes', placeholder='S, M, L, XL')
+                //-     br
+                //- label Variants:  
+                //-     input(type='text', name='variants')
+                //-     hr
+                label Story:  
+                    br
+                    textarea(name='story')
+                    br
+                label Note:  
+                    input(type='text', name='note')
+                    hr
+                label Main Image:  
+                    input(type='file', name='main_image', accept='.png,.jpeg',)
+                    br
+                label Other Images:  
+                    input(type='file', name='images', accept='.png,.jpeg', multiple)
+                    br
+                input(type='submit', value='Adding new product')
+            hr  
+            //- action='/variantpost'
+            form(method='post', name='formVariant')
+                label Adding stock: one color and size at each time
+                br
+                label Product id: 
+                input(type='text', name='product_id')
+                br
+                input(type='text', name='color_code', placeholder='color_code')
+                input(type='text', name='size', placeholder='size')
+                input(type='text', name='stock', placeholder='amount')
+                br
+                input(type='submit', value='Adding stock')
+        
+        script(src='../static/authProduct.js')

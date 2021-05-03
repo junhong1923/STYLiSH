@@ -1,3 +1,11 @@
-nodemodule/
 *.env
 *DS_Store
+public/data/uploads/
+public/Clothes/
+public/images/
+public/campaigns/
+public/addColor.js
+public/style.css
+sql.js
+public/checkout.html
+node_modules

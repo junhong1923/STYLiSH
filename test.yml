@@ -1,0 +1,11 @@
+config:
+  target: "http://localhost:3000"
+  http:
+    pool: 20
+  phases:
+    - duration: 30
+      arrivalRate: 40
+scenarios:
+  - flow:
+    - get:
+        url: "/api/1.0/order/payments"

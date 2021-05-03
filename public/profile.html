@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Ｗelcome Page</title>
+    </head>
+
+    <body>
+        <h1>Member profile</h1>
+        <!-- <h2>Thanks for your shopping!</h2> -->
+        <p id="message"></p>
+        <h2>Hello!</h2>
+        <label for="username" id="name">Username: </label>
+        <br>
+        <label for="email" id="email">Email: </label>
+        <br>
+        <a href="/" style="margin-top:20px">Back to Homepage!</a>
+        <script>
+            let message = document.getElementById('message');
+            let token = window.localStorage.token;
+             // if token, then set authorization and send it to server
+            if (token !== undefined) {
+                // console.log(token);
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', '/api/1.0/user/profile');
+                xhr.setRequestHeader("Authorization", 'Bearer ' + token);
+
+                xhr.onreadystatechange = function() {
+                    
+                    if (xhr.readyState === 4) {
+                        if (xhr.response == 'Error 403 : Wrong Token') {
+                            message.innerHTML = 'Error 403 : Wrong Token';
+                            alert("Error 403 : Wrong Token");
+                        } else {
+                            let resObj = JSON.parse(xhr.response);
+                            console.log(resObj);
+                            let name = document.getElementById('name')
+                            name.innerHTML += resObj.data.name;
+                            let email = document.getElementById('email')
+                            email.innerHTML += resObj.data.email;
+                        }
+                    }
+                }
+                
+                xhr.send()
+            } else {
+                message.innerHTML = 'Error 401 : No token';
+                alert('Error 401 : No token, please Login')
+                window.location.replace("./user/signin"); // redirect to home page
+            }
+            
+        </script>
+    </body>
+    
+</html>
