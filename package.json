@@ -20,9 +20,11 @@
     "multer": "^1.4.2",
     "multer-s3-v3": "^3.10.0",
     "mysql": "^2.18.1",
+    "node-fetch": "^2.6.1",
     "pug": "^3.0.2",
     "redis": "^3.1.0",
-    "tappay-nodejs": "^2.0.11"
+    "tappay-nodejs": "^2.0.11",
+    "validator": "^13.6.0"
   },
   "keywords": [],
   "devDependencies": {

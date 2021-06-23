@@ -20,4 +20,7 @@ There are plenty of approach to run application in background. I choose to use "
 $ sudo yum install tmux  
 then open a new tmux to run the node.js application.
 
+### Midterm
+Dashboad link: https://junhong.tw/admin/dashboard.html
+
 

@@ -7,5 +7,7 @@ public/campaigns/
 public/addColor.js
 public/style.css
 sql.js
+backupSQL/
 public/checkout.html
 node_modules
+localhost.yml

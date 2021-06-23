@@ -1,22 +1,13 @@
 const express = require("express");
 const bodyParser = require("body-parser"); // 將輸入到body的請求（request）解析出來，讓之後的處理事件可以取用這些請求。處理方式透過req.body這個屬性。
 require("dotenv").config();
-const mysql = require("mysql");
+const { pool } = require("./mysqlcon");
 const path = require("path");
 const userRoutes = require("./routes/user");
 const adminRoutes = require("./routes/admin");
 const AppError = require("./utils/appError"); // Customized Error object
 const redis = require("redis");
 const client = redis.createClient("6379", "127.0.0.1"); // returns a RedisClient object
-
-// Create sql connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PWD,
-  database: process.env.DB_DATABASE,
-  connectionLimit: 10
-});
 
 const app = express();
 app.set("json spaces", 2); // response in better json apearance

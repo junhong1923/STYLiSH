@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div id="count" class="info_block">
+        <div id="number"></div>
+    </div>
+    <div id="pie" class="info_block"></div>
+    <div id="histogram" class="info_block"></div>
+    <div id="bar" class="info_block"></div>
+</body>
+<script>
+
+    const count = document.getElementById("count");
+    const pie = document.getElementById("pie");
+    const histogram = document.getElementById("histogram");
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "/api/1.0/admin/dashboard");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            const resObj = JSON.parse(xhr.response);
+            // console.log(resObj.color);
+            count.innerHTML = `Total Revenue: ${resObj.sum["SUM(total)"]}`;
+
+            // Pie Chart
+            const pieChart = [{
+            values: Object.values(resObj.color).map(arr => { return arr[1] }),
+            labels: Object.values(resObj.color).map(arr => { return arr[0] }),
+            marker: {
+                colors: Object.keys(resObj.color).map(hex => { return hexToRGB(hex) })
+            },
+            // name: "Product sold percentage in different colors",
+            type: "pie"
+            }];
+
+            const layout1 = {
+            title: {
+                text: "Product sold percentage in different colors"
+            },
+            height: 400,
+            width: 500
+            };
+
+            Plotly.newPlot("pie", pieChart, layout1);
+
+            // Histogram
+            const histogram = {
+                x: resObj.priceRange,
+                type: "histogram",
+                // name: "price range",
+            };
+            const layout2 = {
+                title: {
+                    text: "Product sold quantity in different price range"
+                },
+                yaxis: {
+                    title: {
+                        text: "Quantity"
+                    }
+                }
+            };
+            Plotly.newPlot('histogram', [histogram], layout2);
+            console.log(resObj.Top5ProductsWithSize)
+
+            // Stacked Bar Chart
+            const traceS = {
+                x: Object.keys(resObj.Top5ProductsWithSize.S).map(x => "Product" + x),
+                y: Object.values(resObj.Top5ProductsWithSize.S),
+                name: 'S',
+                type: 'bar'
+            };
+
+            const traceM = {
+                x: Object.keys(resObj.Top5ProductsWithSize.M).map(x => "Product" + x),
+                y: Object.values(resObj.Top5ProductsWithSize.M),
+                name: 'M',
+                type: 'bar'
+            };
+
+            const traceL = {
+                x: Object.keys(resObj.Top5ProductsWithSize.L).map(x => "Product" + x),
+                y: Object.values(resObj.Top5ProductsWithSize.L),
+                name: 'L',
+                type: 'bar'
+            };
+
+            const traceSize = [traceS, traceM, traceL];
+
+            const layout3 = {
+                barmode: 'stack',
+                title: {
+                    text: "Quantity of top 5 sold products in different sizes"
+                }
+            };
+
+            Plotly.newPlot('bar', traceSize, layout3);
+        }
+    };
+    xhr.send();
+
+    function hexToRGB(h) {
+        let r = 0, g = 0, b = 0;
+
+        // 3 digits
+        if (h.length == 4) {
+            r = "0x" + h[1] + h[1];
+            g = "0x" + h[2] + h[2];
+            b = "0x" + h[3] + h[3];
+
+        // 6 digits
+        } else if (h.length == 7) {
+            r = "0x" + h[1] + h[2];
+            g = "0x" + h[3] + h[4];
+            b = "0x" + h[5] + h[6];
+        }
+        
+        return "rgb("+ +r + "," + +g + "," + +b + ")";
+    }
+    
+</script>
+<!-- <script src="../static/dashboardScript.js"></script> -->
+</html>

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 require("dotenv").config();
 const path = require("path");
-const mysql = require("mysql");
+const { pool } = require("../mysqlcon");
 // router.use('/static', express.static('public'));
 const multer = require("multer");
 
@@ -25,16 +25,11 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWSSecretKey
 });
 
-// Create sql connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PWD,
-  database: "stylish",
-  connectionLimit: 10
+// page
+router.get("/admin/dashboard.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/dashboard.html"));
 });
 
-// page
 router.get("/admin/product.html", (req, res) => {
   res.render("index");
 });
@@ -202,37 +197,103 @@ router.post("/api/1.0/order/checkout", async (req, res) => {
   });
 });
 
-router.get("/api/1.0/order/payments", (req, res) => {
-  let unpaidOrder;
-  client.get("unpaid:orders", async (err, reply) => {
-    if (err) { console.log(err); }
-    // if key doesn't exist in cache, it will return null
-    if (reply) {
-      unpaidOrder = JSON.parse(reply);
-    } else {
-      unpaidOrder = await getPayments();
-      // store payment data into redis
-      client.setex("unpaid:orders", 60 * 60, JSON.stringify(unpaidOrder), err => {
-        if (err) { console.log(err); }
-      });
-    }
-    const unpaidCount = unpaidOrder.length;
-    const myMap = new Map();
-    for (let i = 0; i < unpaidCount; i++) {
-      if (myMap.has(unpaidOrder[i].user_id)) {
-        const val = parseInt(myMap.get(unpaidOrder[i].user_id));
-        myMap.set(unpaidOrder[i].user_id, val + parseInt(unpaidOrder[i].total));
-      } else {
-        myMap.set(unpaidOrder[i].user_id, unpaidOrder[i].total);
-      }
-    }
+router.get("/api/1.0/order/payments", async (req, res) => {
+  // let unpaidOrder;
+  // client.get("unpaid:orders", async (err, reply) => {
+  //   if (err) { console.log(err); }
+  //   // if key doesn't exist in cache, it will return null
+  //   if (reply) {
+  //     unpaidOrder = JSON.parse(reply);
+  //   } else {
+  //     unpaidOrder = await getPayments();
+  //     // store payment data into redis
+  //     // 5/3 先不要set redis
+  //     client.setex("unpaid:orders", 3600, JSON.stringify(unpaidOrder), err => {
+  //       if (err) { console.log(err); }
+  //     });
+  //   }
+  //   const unpaidCount = unpaidOrder.length;
+  //   const myMap = new Map();
+  //   for (let i = 0; i < unpaidCount; i++) {
+  //     if (myMap.has(unpaidOrder[i].user_id)) {
+  //       const val = parseInt(myMap.get(unpaidOrder[i].user_id));
+  //       myMap.set(unpaidOrder[i].user_id, val + parseInt(unpaidOrder[i].total));
+  //     } else {
+  //       myMap.set(unpaidOrder[i].user_id, unpaidOrder[i].total);
+  //     }
+  //   }
 
-    const data = [];
-    for (const [key, value] of myMap) {
-      data.push({ user_id: `${key}`, total_payment: `${value}` });
-    }
-    res.json({ data });
+  //   const data = [];
+  //   for (const [key, value] of myMap) {
+  //     data.push({ user_id: key, total_payment: value });
+  //   }
+  //   res.json({ data });
+  // });
+
+  const unpaidOrder = await getPayments();
+  const unpaidCount = unpaidOrder.length;
+  // Map way:
+  // const myMap = new Map();
+  // for (let i = 0; i < unpaidCount; i++) {
+  //   if (myMap.has(unpaidOrder[i].user_id)) {
+  //     const val = parseInt(myMap.get(unpaidOrder[i].user_id));
+  //     myMap.set(unpaidOrder[i].user_id, val + parseInt(unpaidOrder[i].total));
+  //   } else {
+  //     myMap.set(unpaidOrder[i].user_id, unpaidOrder[i].total);
+  //   }
+  // }
+  //   const data = [];
+  //   for (const [key, value] of myMap) {
+  //     data.push({ user_id: key, total_payment: value });
+  //   }
+  //   res.status(200).json({ data });
+  // });
+
+  // normal object way:
+  // const myMap = {};
+  // for (let i = 0; i < unpaidCount; i++) {
+  //   if (unpaidOrder[i].user_id in myMap) {
+  //     const val = parseInt(myMap[unpaidOrder[i].user_id]);
+  //     myMap[unpaidOrder[i].user_id] = val + parseInt(unpaidOrder[i].total);
+  //   } else {
+  //     myMap[unpaidOrder[i].user_id] = unpaidOrder[i].total;
+  //   }
+  // }
+
+  // const data = [];
+  // for (const key in myMap) {
+  //   data.push({ user_id: key, total_payment: myMap[key] });
+  // }
+  // res.json({ data });
+
+  // group by:
+  const result = await getPaymentsGroupBy();
+  const data = result.map(row => {
+    return { user_id: row.user_id, total_payment: row["SUM(total)"] };
   });
+  res.json({ data });
+});
+
+const midterm = require("../utils/midterm");
+router.get("/api/1.0/admin/dashboard", async (req, res) => {
+  const sum = await midterm.getOrderDataSum();
+  const color = await midterm.getQtyByColor();
+  const priceRange = await midterm.getProductsByPriceRange();
+  const Top5ProductsWithSize = await midterm.getTop5ProductsWithSize();
+
+  let colorTotal = 0;
+  // 加總
+  for (const key in color) {
+    colorTotal += color[key][1];
+  }
+  // 換成百分比
+  for (const key in color) {
+    color[key][1] /= colorTotal;
+    color[key][1] = Number(color[key][1] * 100).toFixed(1);
+  }
+
+  const resObj = { sum, color, priceRange, Top5ProductsWithSize };
+  res.json(resObj);
 });
 
 // functions
@@ -303,7 +364,9 @@ function insertFakeOrderData (data) {
       if (err) reject(err); // not connected
 
       // Use the connection
-      connection.query("INSERT INTO UnpaidOrder_record SET ?", data, function (err, result) {
+      // [{ user_id: 3, total: 341 }, { user_id: 5, total: 717 }] -> [[ 3, 341 ], [ 5, 717 ]]
+      connection.query("TRUNCATE TABLE UnpaidOrder_record");
+      connection.query("INSERT INTO UnpaidOrder_record (user_id, total) VALUES ?", [data.map(x => Object.values(x))], function (err, result) {
         resolve(result);
         // When done with the connection, release it.
         connection.release();
@@ -317,33 +380,54 @@ function insertFakeOrderData (data) {
 
 // eslint-disable-next-line no-unused-vars
 async function genFakeOrderData (times) {
+  const inputData = [];
   for (let i = 0; i < times; i++) {
     const total = Math.floor(Math.random() * 900) + 100; // random integer (100~1000)
     const userId = Math.floor(Math.random() * 5 + 1);
     console.log(`${userId}: ${total}`);
-    const inputData = { user_id: userId, total: total };
-    await insertFakeOrderData(inputData);
+    inputData.push({ user_id: userId, total: total });
   }
+  await insertFakeOrderData(inputData);
 }
-// genFakeOrderData(2500);
 
-function getPayments () {
+// genFakeOrderData(26000);
+
+function getPaymentsGroupBy () {
   return new Promise((resolve, reject) => {
-    pool.getConnection((err, connection) => {
-      if (err) reject(err); // not connected
-
-      // Use the connection
-      connection.query("SELECT user_id, total FROM UnpaidOrder_record WHERE status = 'unpaid'", function (err, result) {
-        resolve(result);
-        // When done with the connection, release it.
-        connection.release();
-
-        // Handle error after the release.
-        if (err) throw err;
-      });
+    pool.query("SELECT user_id, SUM(total) FROM UnpaidOrder_record GROUP BY user_id", function (err, result) {
+      if (err) reject(err);
+      resolve(result);
     });
   });
 }
+
+function getPayments () {
+  // 5/4 seems shorter code would be faster than below one
+  return new Promise((resolve, reject) => {
+    pool.query("SELECT user_id, total FROM UnpaidOrder_record", function (err, result) {
+      if (err) reject(err);
+      resolve(result);
+    });
+  });
+}
+
+// function getPayments () {
+//   return new Promise((resolve, reject) => {
+//     pool.getConnection((err1, connection) => {
+//       if (err1) reject(err1); // not connected
+
+//       // Use the connection
+//       connection.query("SELECT user_id, total FROM UnpaidOrder_record", function (err2, result) {
+//         resolve(result);
+//         // When done with the connection, release it.
+//         connection.release();
+
+//         // Handle error after the release.
+//         if (err2) throw err2;
+//       });
+//     });
+//   });
+// }
 
 function insertPayment (data, PayData, orderId) {
   return new Promise((resolve, reject) => {
@@ -424,6 +508,6 @@ function IpLimiter (req, res, next) {
   });
 }
 
-checkRedisKey();
+// checkRedisKey();
 
 module.exports = router;

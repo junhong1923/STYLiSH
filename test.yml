@@ -1,10 +1,11 @@
 config:
-  target: "http://localhost:3000"
+  # target: "http://3.142.177.193"
+  target: "http://Load-Balancer-2016427992.us-east-2.elb.amazonaws.com"
   http:
     pool: 20
   phases:
-    - duration: 30
-      arrivalRate: 40
+    - duration: 1000
+      arrivalRate: 10
 scenarios:
   - flow:
     - get:

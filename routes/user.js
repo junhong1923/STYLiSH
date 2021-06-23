@@ -10,16 +10,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const axios = require("axios");
 
-const mysql = require("mysql");
-
-// Create sql connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PWD,
-  database: "stylish",
-  connectionLimit: 10
-});
+const { pool } = require("../mysqlcon");
 
 // below two lines are needed to see AJAX req.body
 router.use(express.json());
